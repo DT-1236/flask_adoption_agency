@@ -1,9 +1,11 @@
 """Blogly application."""
 
 from flask import Flask, render_template, redirect, request, flash
+from flask_debugtoolbar import DebugToolbarExtension
+
 from models import db, connect_db, Pet
 from forms import AddPetForm, EditPetForm
-from flask_debugtoolbar import DebugToolbarExtension
+from api_classes import PetFinder
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///adoption'
@@ -21,13 +23,21 @@ app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
 @app.route('/')
 def display_pets():
     """Displays list of all pets"""
-    pets = Pet.query.all()
-    return render_template('pets.html', pets=pets)
+
+    available_pets = Pet.query.filter(Pet.available).all()
+    unavailable_pets = Pet.query.filter(not Pet.available).all()
+
+    return render_template(
+        'pets.html',
+        available_pets=available_pets,
+        unavailable_pets=unavailable_pets,
+        random=PetFinder.get_random())
 
 
 @app.route('/add', methods=['POST', 'GET'])
 def handle_add_form():
     """Function will handle the AddPetForm"""
+
     form = AddPetForm()
     if form.validate_on_submit():
         pet = Pet(

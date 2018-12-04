@@ -12,32 +12,12 @@
     <p>Age: {{pet.age}}</p>
     <p>Species: {{pet.species}}</p>
 </div>
+
 <form action="/{{pet.id}}" method="POST">
 
-    {{form.hidden_tag()}}
-
-    {% for field in form if field.widget.input_type != 'hidden' %}
-    {% if field.type == "BooleanField" %}
-    <div class="form-group form-check">
-        {{field(class_="form-check-input")}}
-        {{field.label(class_="form-check-label")}}        
+    {% include 'form.html' %}
     
-        {% for error in field.errors %}
-        {{error}}
-        {% endfor %}
-        </div>
-    {% else %}
-    <div class="form-group">
-
-        {{field.label}}        
-        {{field(class_="form-control")}}
-
-        {% for error in field.errors %}
-        {{error}}
-        {% endfor %}
-    </div>
-    {% endif %}
-    {% endfor %}
     <button class="btn btn-primary" type="submit">Upgrade Pet!</button>
 </form>
+
 {% endblock %}

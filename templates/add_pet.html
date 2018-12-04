@@ -7,18 +7,8 @@
 {% block body%}
 <form action="/add" method="POST">
 
-    {{form.hidden_tag()}}
+    {% include 'form.html' %}
 
-    {% for field in form if field.widget.input_type != 'hidden' %}
-    <div>
-        {{field.label}}
-        {{field(class_="form-control")}}
-
-        {% for error in field.errors %}
-        {{error}}
-        {% endfor %}
-    </div>
-    {% endfor %}
-    <button type="submit">Welcome Pet!</button>
+    <button class="btn btn-primary" type="submit">Welcome Pet!</button>
 </form>
 {% endblock %}
