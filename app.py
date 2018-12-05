@@ -1,6 +1,6 @@
 """Blogly application."""
 
-from flask import Flask, render_template, redirect, request, flash
+from flask import Flask, render_template, redirect, flash
 from flask_debugtoolbar import DebugToolbarExtension
 from werkzeug.utils import secure_filename
 
@@ -40,14 +40,16 @@ def handle_add_form():
 
     form = AddPetForm()
     if form.validate_on_submit():
-        import pdb
-        pdb.set_trace()
-        pet = Pet(
-            **{
-                key: value
-                for (key, value) in form.data.items() if key != 'csrf_token'
-            })
+        pet_dict = {
+            key: value
+            for (key, value) in form.data.items()
+            if key not in ('csrf_token', 'uploaded_photo')
+        }
+        pet = Pet(**pet_dict)
         db.session.add(pet)
+        db.session.commit()
+        # Need a pet_id to create a path
+        handle_uploaded_photo(pet, form)
         db.session.commit()
         flash(f"Successfully added {pet.name}")
         return redirect('/')
@@ -62,7 +64,7 @@ def display_pet_and_handle_edits(pet_id: int):
     pet = Pet.query.get_or_404(pet_id)
     form = EditPetForm(obj=pet)
     if form.validate_on_submit():
-        pet.photo_url = form.photo_url.data
+        handle_uploaded_photo(pet, form)
         pet.notes = form.notes.data
         pet.available = form.available.data
         db.session.add(pet)
@@ -71,3 +73,15 @@ def display_pet_and_handle_edits(pet_id: int):
         return redirect(f'/{pet_id}')
     else:
         return render_template('pet.html', pet=pet, form=form)
+
+
+def handle_uploaded_photo(pet: Pet, form: (AddPetForm, EditPetForm)):
+    if form.uploaded_photo.data:
+        image_file = form.uploaded_photo.data
+        filename = secure_filename(image_file.filename)
+        extension = filename[filename.rfind('.') + 1:]
+        filepath = f"static//pet_photos//{pet.id}.{extension}"
+        image_file.save(filepath)
+        pet.photo_url = filepath.replace('//', '/')
+    else:
+        pet.photo_url = form.photo_url.data

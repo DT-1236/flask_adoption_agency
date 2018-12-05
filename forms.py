@@ -30,6 +30,8 @@ class AddPetForm(FlaskForm):
 class EditPetForm(FlaskForm):
     """Update fancy pets"""
 
-    photo_url = StringField("Picture URL", validators=[Optional(), URL()])
     notes = TextAreaField("Notes")
     available = BooleanField("Available")
+    photo_url = StringField("Picture URL", validators=[Optional(), URL()])
+    uploaded_photo = FileField(
+        "Upload a photo", validators=[Optional(), FileRequired()])
