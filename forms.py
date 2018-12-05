@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileRequired, FileField
 from wtforms import StringField, IntegerField, TextAreaField, SelectField, BooleanField
 from wtforms.validators import URL, Optional, InputRequired, NumberRange
 
@@ -21,6 +22,8 @@ class AddPetForm(FlaskForm):
                 message="Age must be between %(min)s and %(max)s")
         ])
     photo_url = StringField("Picture URL", validators=[Optional(), URL()])
+    uploaded_photo = FileField(
+        "Upload a photo", validators=[Optional(), FileRequired()])
     notes = TextAreaField("Notes")
 
 

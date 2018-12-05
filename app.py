@@ -2,6 +2,7 @@
 
 from flask import Flask, render_template, redirect, request, flash
 from flask_debugtoolbar import DebugToolbarExtension
+from werkzeug.utils import secure_filename
 
 from models import db, connect_db, Pet
 from forms import AddPetForm, EditPetForm
@@ -24,9 +25,8 @@ app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
 def display_pets():
     """Displays list of all pets"""
 
-    available_pets = Pet.query.filter(Pet.available).all()
-    unavailable_pets = Pet.query.filter(not Pet.available).all()
-
+    available_pets = Pet.query.filter_by(available=True).all()
+    unavailable_pets = Pet.query.filter_by(available=False).all()
     return render_template(
         'pets.html',
         available_pets=available_pets,
@@ -40,12 +40,13 @@ def handle_add_form():
 
     form = AddPetForm()
     if form.validate_on_submit():
+        import pdb
+        pdb.set_trace()
         pet = Pet(
-            name=form.name.data,
-            species=form.species.data,
-            photo_url=form.photo_url.data,
-            age=form.age.data,
-            notes=form.notes.data)
+            **{
+                key: value
+                for (key, value) in form.data.items() if key != 'csrf_token'
+            })
         db.session.add(pet)
         db.session.commit()
         flash(f"Successfully added {pet.name}")
