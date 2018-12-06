@@ -6,14 +6,14 @@
 
 {% block body%}
 {% if pet.photo_url%}
-<img src="{{pet.photo_url}}" alt="Fancy picture" class="mb-3 img-fluid p-1 border">
+<img src="{% if ' ' in pet.photo_url %}{{'static/pet_photos/{id}{ext}'.format(id=pet.id, ext=pet.photo_url.split(' ')[0])}}{% else %}{{pet.photo_url}}{% endif %}" alt="Fancy picture" class="mb-3 img-fluid p-1 border">
 {% endif %}
 <div>
     <p>Age: {{pet.age}}</p>
     <p>Species: {{pet.species}}</p>
 </div>
 
-<form action="/{{pet.id}}" method="POST">
+<form action="/{{pet.id}}" method="POST" enctype="multipart/form-data">
 
     {% include 'form.html' %}
     

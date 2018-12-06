@@ -1,5 +1,3 @@
-"""Blogly application."""
-
 from flask import Flask, render_template, redirect, flash
 from flask_debugtoolbar import DebugToolbarExtension
 from werkzeug.utils import secure_filename
@@ -40,18 +38,7 @@ def handle_add_form():
 
     form = AddPetForm()
     if form.validate_on_submit():
-        pet_dict = {
-            key: value
-            for (key, value) in form.data.items()
-            if key not in ('csrf_token', 'uploaded_photo')
-        }
-        pet = Pet(**pet_dict)
-        db.session.add(pet)
-        db.session.commit()
-        # Need a pet_id to create a path
-        handle_uploaded_photo(pet, form)
-        db.session.commit()
-        flash(f"Successfully added {pet.name}")
+        add_new_pet(form)
         return redirect('/')
     else:
         return render_template('add_pet.html', form=form)
@@ -64,24 +51,49 @@ def display_pet_and_handle_edits(pet_id: int):
     pet = Pet.query.get_or_404(pet_id)
     form = EditPetForm(obj=pet)
     if form.validate_on_submit():
-        handle_uploaded_photo(pet, form)
-        pet.notes = form.notes.data
-        pet.available = form.available.data
-        db.session.add(pet)
-        db.session.commit()
-        flash(f"Upgraded fanciness on {pet.name}")
+        edit_existing_pet(pet, form)
         return redirect(f'/{pet_id}')
     else:
         return render_template('pet.html', pet=pet, form=form)
 
 
 def handle_uploaded_photo(pet: Pet, form: (AddPetForm, EditPetForm)):
+    """Updates the Pet object to have an appropriate photo_url or to indicate that the image is on file.
+    Saves the uploaded file to static/pet_photos/{pet.id}.{file_extension}.
+    Does not commit - must be done outside of the function call"""
     if form.uploaded_photo.data:
         image_file = form.uploaded_photo.data
         filename = secure_filename(image_file.filename)
         extension = filename[filename.rfind('.') + 1:]
         filepath = f"static//pet_photos//{pet.id}.{extension}"
         image_file.save(filepath)
-        pet.photo_url = filepath.replace('//', '/')
+        pet.photo_url = f".{extension} on file"
     else:
         pet.photo_url = form.photo_url.data
+
+
+def add_new_pet(form: AddPetForm):
+    """Runs in the an add pet view function. Processes the AddPetForm and adds a new pet"""
+    pet_dict = {
+        key: value
+        for (key, value) in form.data.items()
+        if key not in ('csrf_token', 'uploaded_photo')
+    }
+    pet = Pet(**pet_dict)
+    db.session.add(pet)
+    db.session.commit()
+    # Need a pet_id to create a path
+    handle_uploaded_photo(pet, form)
+    db.session.add(pet)
+    db.session.commit()
+    flash(f"Successfully added {pet.name}")
+
+
+def edit_existing_pet(pet: Pet, form: EditPetForm):
+    """Runs in an edit pet view function. Processes the EditPetForm to edit an existing pet"""
+    pet.notes = form.notes.data
+    pet.available = form.available.data
+    handle_uploaded_photo(pet, form)
+    db.session.add(pet)
+    db.session.commit()
+    flash(f"Upgraded fanciness on {pet.name}")

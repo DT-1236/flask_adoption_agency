@@ -28,7 +28,7 @@
             {% for pet in available_pets %}
             <li>
                 {% if pet.photo_url %}
-                <img src="{{pet.photo_url}}" alt="" class="mb-3 img-fluid p-1 border">
+                <img src="{% if ' ' in pet.photo_url %}{{'static/pet_photos/{id}{ext}'.format(id=pet.id, ext=pet.photo_url.split(' ')[0])}}{% else %}{{pet.photo_url}}{% endif %}" alt="" class="mb-3 img-fluid p-1 border">
                 {% endif %}
                 <h4><a href="/{{pet.id}}">{{pet.name}}</a>{% if pet.available%} is available!{% endif %}</h4>
             </li>
